@@ -1,0 +1,85 @@
+version: 2
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - "Checkout"
+      - "Install Backend deps":
+          requires:
+            - "Checkout"
+      - "Backend Testing":
+          requires:
+            - "Install Backend deps"
+      - "Summarize":
+          requires:
+            - "Backend Testing"
+
+defaults: &defaults
+  docker: &ruby_image
+    - &ruby_image
+      image: circleci/ruby:2.4-jessie
+      environment:
+        BUNDLE_PATH: vendor/bundle
+        BUNDLE_VERSION: 1.16.1
+        BUNDLE_JOBS: 4
+        BUNDLE_RETRY: 3
+        RAILS_ENV: test
+        bundle_cmd: bundle _${BUNDLE_VERSION}_
+
+jobs:
+  "Checkout":
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: .
+      - checkout
+      - persist_to_workspace:
+          root: .
+          paths: .
+
+  "Install Backend deps":
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: .
+      - restore_cache:
+          keys:
+            -bundle-v1-{{ checksum "Gemfile.lock" }}
+      - run:
+          name: Install bundler
+          command: gem install bundler --version=$BUNDLE_VERSION
+      - run:
+          name: Bundle Install
+          command: |-
+            bundle _${BUNDLE_VERSION}_ check || bundle _${BUNDLE_VERSION}_ install --retry=$BUNDLE_RETRY
+      - save_cache:
+          key: bundle-v1-{{ checksum "Gemfile.lock" }}
+          paths: vendor/bundle
+      - persist_to_workspace:
+          root: .
+          paths: vendor/bundle
+
+  "Backend Testing":
+    parallelism: 2
+    docker:
+      - *ruby_image
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install bundler
+          command: gem install bundler --version=$BUNDLE_VERSION
+      - run:
+          name: Run test
+          command: |-
+            bundle _${BUNDLE_VERSION}_ exec rake test
+
+  "Summarize":
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install bundler
+          command: gem install bundler --version=$BUNDLE_VERSION

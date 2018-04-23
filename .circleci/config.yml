@@ -89,6 +89,8 @@ jobs:
 
   "Deploy":
     <<: *defaults
+    environment:
+      HEROKU_APP_NAME: circle-ci2
     steps:
       - attach_workspace:
           at: .

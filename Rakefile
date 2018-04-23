@@ -4,3 +4,8 @@
 require_relative 'config/application'
 
 Rails.application.load_tasks
+
+desc 'test rake task'
+task :test do; end
+
+task default: :test

@@ -14,9 +14,18 @@ workflows:
       - "Summarize":
           requires:
             - "Backend Testing"
-      - "Deploy":
+      - "Deploy Staging":
           requires:
             - "Summarize"
+          filters:
+            branches:
+              only: master
+      - "Deploy Production":
+          requires:
+            - "Summarize"
+          filters:
+            branches:
+              only: production
 
 defaults: &defaults
   docker: &ruby_image
@@ -87,10 +96,25 @@ jobs:
           name: Install bundler
           command: gem install bundler --version=$BUNDLE_VERSION
 
-  "Deploy":
+  "Deploy Staging":
     <<: *defaults
     environment:
       HEROKU_APP_NAME: circle-ci2
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Setup Heroku
+          command: bash .circleci/setup-heroku.sh
+      - run:
+          command: |
+            git push heroku HEAD:refs/heads/master
+            sleep 5 # sleep for 5 seconds to wait for dynos
+            heroku restart
+  "Deploy Production":
+    <<: *defaults
+    environment:
+      HEROKU_APP_NAME: circle-ci2-prod
     steps:
       - attach_workspace:
           at: .

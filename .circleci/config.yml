@@ -14,7 +14,7 @@ workflows:
       - "Summarize":
           requires:
             - "Backend Testing"
-      - "Deploy"
+      - "Deploy":
           requires:
             - "Summarize"
 

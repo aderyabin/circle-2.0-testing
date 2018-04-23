@@ -15,12 +15,14 @@ workflows:
           requires:
             - "Backend Testing"
       - "Deploy Staging":
+          context: org-global
           requires:
             - "Summarize"
           filters:
             branches:
-              only: master
+              only: staging
       - "Deploy Production":
+          context: org-global
           requires:
             - "Summarize"
           filters:
@@ -30,7 +32,7 @@ workflows:
 defaults: &defaults
   docker: &ruby_image
     - &ruby_image
-      image: circleci/ruby:2.4-jessie
+      image: netsoftholdings/hubstaff-core:ruby2.2.5-node6.14.1-jessie
       environment:
         BUNDLE_PATH: vendor/bundle
         BUNDLE_VERSION: 1.16.1
@@ -57,7 +59,7 @@ jobs:
           at: .
       - restore_cache:
           keys:
-            -bundle-v1-{{ checksum "Gemfile.lock" }}
+            - bundle-v1-{{ checksum "Gemfile.lock" }}
       - run:
           name: Install bundler
           command: gem install bundler --version=$BUNDLE_VERSION
@@ -105,12 +107,13 @@ jobs:
           at: .
       - run:
           name: Setup Heroku
-          command: bash .circleci/setup-heroku.sh
+          command: bash .circleci/setup.sh
       - run:
-          command: |
-            git push heroku HEAD:refs/heads/master
-            sleep 5 # sleep for 5 seconds to wait for dynos
-            heroku restart
+          name: Push to Heroku
+          command: git push --force heroku:circle-ci2.git HEAD:refs/heads/master
+      - run:
+          name: Run rake command
+          command: heroku run rake circle
   "Deploy Production":
     <<: *defaults
     environment:
@@ -120,9 +123,13 @@ jobs:
           at: .
       - run:
           name: Setup Heroku
-          command: bash .circleci/setup-heroku.sh
+          command: bash .circleci/setup.sh
       - run:
-          command: |
-            git push heroku HEAD:refs/heads/master
-            sleep 5 # sleep for 5 seconds to wait for dynos
-            heroku restart
+          name: Push to Heroku circle-ci2-prod
+          command: git push --force heroku:circle-ci2-prod.git HEAD:refs/heads/master
+      - run:
+          name: Run rake command
+          command: heroku run rake circle
+      - run:
+          name: Push to Heroku circle-ci2-prod2
+          command: git push --force heroku:circle-ci2-prod2.git HEAD:refs/heads/master

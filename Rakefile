@@ -8,4 +8,10 @@ Rails.application.load_tasks
 desc 'test rake task'
 task :test do; end
 
+desc 'command to run inside circleci'
+task :circle do
+  puts "IT WORKS"
+end
+
+
 task default: :test

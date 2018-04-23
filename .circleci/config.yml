@@ -83,3 +83,18 @@ jobs:
       - run:
           name: Install bundler
           command: gem install bundler --version=$BUNDLE_VERSION
+
+  "Deploy"
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Setup Heroku
+          command: bash .circleci/setup-heroku.sh
+
+      - run:
+          command: |
+            git push heroku HEAD:refs/heads/master
+            sleep 5 # sleep for 5 seconds to wait for dynos
+            heroku restart

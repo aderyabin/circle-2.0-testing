@@ -8,26 +8,29 @@ workflows:
       - "Install Backend deps":
           requires:
             - "Checkout"
-      - "Backend Testing":
-          requires:
-            - "Install Backend deps"
-      - "Summarize":
-          requires:
-            - "Backend Testing"
-      - "Deploy Staging":
-          context: org-global
-          requires:
-            - "Summarize"
           filters:
-            branches:
-              only: staging
-      - "Deploy Production":
-          context: org-global
-          requires:
-            - "Summarize"
-          filters:
-            branches:
-              only: production
+            tags:
+              only: /^v\d+(\.\d+){2}(-.*)?$/
+      # - "Backend Testing":
+      #     requires:
+      #       - "Install Backend deps"
+      # - "Summarize":
+      #     requires:
+      #       - "Backend Testing"
+      # - "Deploy Staging":
+      #     context: org-global
+      #     requires:
+      #       - "Summarize"
+      #     filters:
+      #       branches:
+      #         only: staging
+      # - "Deploy Production":
+      #     context: org-global
+      #     requires:
+      #       - "Summarize"
+      #     filters:
+      #       branches:
+      #         only: production
 
 defaults: &defaults
   docker: &ruby_image

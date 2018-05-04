@@ -4,10 +4,13 @@ workflows:
   version: 2
   test:
     jobs:
-      - "Checkout"
-      - "Install Backend deps":
+      - checkout:
+          filters:
+            tags:
+              only: /^v\d+(\.\d+){2}(-.*)?$/
+      - backend_deps:
           requires:
-            - "Checkout"
+            - checkout
           filters:
             tags:
               only: /^v\d+(\.\d+){2}(-.*)?$/
@@ -45,7 +48,7 @@ defaults: &defaults
         bundle_cmd: bundle _${BUNDLE_VERSION}_
 
 jobs:
-  "Checkout":
+  checkout:
     <<: *defaults
     steps:
       - attach_workspace:
@@ -55,7 +58,7 @@ jobs:
           root: .
           paths: .
 
-  "Install Backend deps":
+  backend_deps:
     <<: *defaults
     steps:
       - attach_workspace:
